@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#133c34">
+  <title>Banco Python</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { font: 16px system-ui, sans-serif; color: #172c26; background: #e9f0ec; }
+    body { margin: 0; display: flex; justify-content: center; align-items: center;}
+    main { width: min(100%, 460px);  margin: 50px auto; padding: 26px 22px; background: #f7faf8; box-shadow: 0 0 60px #163c3014; height: fit-content;}
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    header div { flex: 1; }
+    h1, h2, p { margin: 0; }
+    h1 { font-size: 1.15rem; }
+    h2 { font-size: 1rem; }
+    small, .muted { color: #4d675f; font-size: .85rem; }
+    .logo, .icon { display: grid; place-items: center; border-radius: 14px; width: 44px; height: 44px; background: #dff1e6; color: #146043; font-weight: 800; }
+    .badge { border: 1px solid #cadbd2; border-radius: 30px; padding: 5px 9px; font-size: .69rem; letter-spacing: .08em; }
+    .balance { padding: 23px; border-radius: 24px; background: linear-gradient(120deg, #133c34, #1c5a47); color: #fff; }
+    .balance p { color: #d6e8dd; font-size: .86rem; }
+    #saldo { display: block; font-size: clamp(1.6rem, 7vw, 2.5rem); overflow-wrap: anywhere; margin: 4px 0 16px; letter-spacing: -.04em; }
+    label { display: grid; gap: 5px; font-size: .85rem; }
+    input, select, button { width: 100%; min-width: 0; min-height: 42px; border-radius: 11px; font: inherit; }
+    input, select { border: 1px solid #ccdcd3; padding: 8px 11px; background: #fff; color: #172c26; }
+    .balance select { background: #fff; }
+    button { padding: 8px 10px; background: #dff1e6; color: #124a35; border: 0; font-weight: 650; cursor: pointer; }
+    button.primary { background: #176247; color: white; }
+    button:disabled, select:disabled { opacity: .55; cursor: not-allowed; }
+    :focus-visible { outline: 2px solid #27866a; outline-offset: 2px; }
+    form { display: grid; gap: 9px; }
+    #movimentar, section, details { margin-top: 16px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    section, details { border: 1px solid #e0ebe4; border-radius: 18px; background: #fff; padding: 16px; }
+    section > header { justify-content: space-between; margin-bottom: 12px; }
+    #status { min-height: 1.2rem; margin-top: 10px; font-size: .85rem; color: #146043; }
+    #status.erro { color: #a02929; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    .entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid #e8efea; font-size: .9rem; }
+    .entry .icon { width: 33px; height: 33px; border-radius: 10px; }
+    .entry small { display: block; font-size: .74rem; }
+    .entry b { max-width: 42vw; overflow-wrap: anywhere; text-align: right; }
+    .deposito { color: #146043; }
+    summary { font-weight: 650; cursor: pointer; }
+    details form { margin-top: 16px; }
+    details form + form { border-top: 1px solid #e8efea; padding-top: 16px; }
+    footer { margin-top: 20px; text-align: center; }
+    footer a { color: #146043; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="logo" aria-hidden="true">BP</span>
+      <div><h1>Banco Python</h1><small>Visão geral da conta</small></div>
+      <span class="badge">DEMO</span>
+    </header>
+
+    <div class="balance">
+      <p>Saldo disponível</p>
+      <strong id="saldo">—</strong>
+      <label>Conta ativa<select id="conta" disabled><option value="">Nenhuma conta cadastrada</option></select></label>
+    </div>
+
+    <form id="movimentar">
+      <label>Valor em reais<input name="valor" inputmode="decimal" placeholder="0,00" pattern="[0-9]{1,10}([.,][0-9]{1,2})?" maxlength="13" required></label>
+      <div class="actions">
+        <button class="primary" name="operacao" value="depositos" disabled>↓ Depositar</button>
+        <button name="operacao" value="saques" disabled>↑ Sacar</button>
+      </div>
+    </form>
+    <p id="status" role="status"></p>
+
+    <section aria-labelledby="titulo-extrato">
+      <header><h2 id="titulo-extrato">Extrato</h2><small>Mais recentes primeiro</small></header>
+      <p id="vazio" class="muted">Cadastre um cliente e abra uma conta para começar.</p>
+      <ul id="movimentos"></ul>
+    </section>
+
+    <details>
+      <summary>Cadastro e contas</summary>
+      <form id="usuario">
+        <h2>Novo cliente</h2>
+        <label>Nome<input name="nome" maxlength="200" required></label>
+        <label>CPF (11 dígitos)<input name="cpf" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required></label>
+        <label>Nascimento<input name="data_nascimento" type="date" required></label>
+        <label>Endereço<input name="endereco" maxlength="200" required></label>
+        <button>Cadastrar cliente</button>
+      </form>
+      <form id="abrir">
+        <h2>Nova conta</h2>
+        <label>CPF do cliente<input name="cpf" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required></label>
+        <button>Abrir conta</button>
+      </form>
+    </details>
+    <footer class="muted">Ambiente de demonstração · <a href="/docs">Documentação da API</a></footer>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const conta = $('conta');
+    const status = $('status');
+    const dinheiro = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const horario = new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo'
+    });
+    const controles = document.querySelectorAll('button, select');
+
+    async function api(rota, dados) {
+      const resposta = await fetch(`/api/${rota}`, dados ? {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados)
+      } : undefined);
+      const json = await resposta.json();
+      if (!resposta.ok) throw new Error(typeof json.detail === 'string' ? json.detail : 'Confira os dados informados.');
+      return json;
+    }
+
+    async function executar(tarefa) {
+      controles.forEach(el => el.disabled = true);
+      status.textContent = '';
+      status.className = '';
+      try {
+        status.textContent = (await tarefa()) || '';
+      } catch (erro) {
+        status.textContent = erro instanceof TypeError ? 'Não foi possível conectar à API.' : erro.message;
+        status.className = 'erro';
+      } finally {
+        controles.forEach(el => el.disabled = false);
+        conta.disabled = !conta.value;
+        $('movimentar').querySelectorAll('button').forEach(el => el.disabled = !conta.value);
+      }
+    }
+
+    function exibir(extrato) {
+      $('saldo').textContent = extrato ? dinheiro.format(extrato.saldo) : '—';
+      const itens = extrato?.movimentacoes || [];
+      $('vazio').hidden = itens.length > 0;
+      $('vazio').textContent = extrato ? 'Nenhuma movimentação nesta conta.' : 'Cadastre um cliente e abra uma conta para começar.';
+      $('movimentos').replaceChildren(...itens.slice().reverse().map(item => {
+        const deposito = item.tipo === 'deposito';
+        const linha = document.createElement('li');
+        linha.className = 'entry';
+        linha.innerHTML = '<span class="icon" aria-hidden="true"></span><div><strong></strong><small></small></div><b></b>';
+        linha.querySelector('.icon').textContent = deposito ? '↓' : '↑';
+        linha.querySelector('strong').textContent = deposito ? 'Depósito' : 'Saque';
+        linha.querySelector('small').textContent = horario.format(new Date(item.realizado_em));
+        linha.querySelector('b').className = item.tipo;
+        linha.querySelector('b').textContent = dinheiro.format(deposito ? item.valor : `-${item.valor}`);
+        return linha;
+      }));
+    }
+
+    async function carregarContas(numero) {
+      const contas = await api('contas');
+      conta.replaceChildren(...contas.map(c => new Option(`${c.titular} · ${c.agencia} / ${c.numero}`, c.numero)));
+      if (!contas.length) conta.add(new Option('Nenhuma conta cadastrada', ''));
+      if (numero !== undefined) conta.value = numero;
+      exibir(conta.value ? await api(`contas/${conta.value}/extrato`) : null);
+    }
+
+    conta.addEventListener('change', () => executar(async () => {
+      $('saldo').textContent = '—';
+      $('movimentos').replaceChildren();
+      $('vazio').hidden = true;
+      exibir(await api(`contas/${conta.value}/extrato`));
+    }));
+    $('usuario').addEventListener('submit', evento => {
+      evento.preventDefault();
+      executar(async () => {
+        const form = evento.target;
+        const dados = Object.fromEntries(new FormData(form));
+        await api('usuarios', dados);
+        form.reset();
+        $('abrir').elements.cpf.value = dados.cpf;
+        return 'Cliente cadastrado. Agora você pode abrir a conta.';
+      });
+    });
+    $('abrir').addEventListener('submit', evento => {
+      evento.preventDefault();
+      executar(async () => {
+        const form = evento.target;
+        const nova = await api('contas', Object.fromEntries(new FormData(form)));
+        form.reset();
+        await carregarContas(nova.numero);
+        return 'Conta aberta com sucesso.';
+      });
+    });
+    $('movimentar').addEventListener('submit', evento => {
+      evento.preventDefault();
+      if (!conta.value || !evento.submitter) return;
+      const operacao = evento.submitter.value;
+      executar(async () => {
+        const form = evento.target;
+        const valor = form.elements.valor.value.replace(',', '.');
+        exibir(await api(`contas/${conta.value}/${operacao}`, { valor }));
+        form.reset();
+        return operacao === 'depositos' ? 'Depósito realizado.' : 'Saque realizado.';
+      });
+    });
+    executar(carregarContas);
+  </script>
+</body>
+</html>

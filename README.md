@@ -1,49 +1,60 @@
-# Sistema Bancário em Python
+# Banco Python
 
-Este projeto é um sistema bancário simples desenvolvido em Python, com funcionalidades básicas de depósito, saque e extrato. O objetivo é simular operações bancárias de forma didática, utilizando conceitos fundamentais de programação.
+Simulador bancário didático com FastAPI, SQLite e uma interface web responsiva em HTML, CSS e JavaScript. O frontend é servido pela própria API: não precisa de Node.js nem de instalar um servidor de banco de dados.
 
-## Funcionalidades
+## Como rodar
 
-- **Depósito:** Permite adicionar saldo à conta, registrando cada operação no extrato.
-- **Saque:** Permite realizar saques, respeitando o limite diário de valor e quantidade de saques.
-- **Extrato:** Exibe todas as movimentações realizadas e o saldo atual.
-- **Validação de entradas:** Garante que apenas valores válidos sejam processados.
+Requer Python 3.10 ou mais recente.
 
-## Como usar
-
-1. Clone este repositório ou baixe os arquivos.
-2. Execute o arquivo `main.py` com Python 3:
-   ```
-   python main.py
-   ```
-3. Siga as instruções do menu interativo no terminal.
-
-## Exemplo de uso
-
-```
-Bem-vindo ao Banco Python!
-Escolha uma opção:
-
-[d] Depositar
-[s] Sacar
-[e] Extrato
-[q] Sair
-
-=> d
-Informe o valor do depósito: R$ 100
-Depósito de R$ 100.00 realizado com sucesso!
+```sh
+git clone https://github.com/MysticXiz/sistema-bancario-python.git
+cd sistema-bancario-python
+python -m venv .venv
 ```
 
-## Requisitos
+Ative o ambiente virtual com `.venv\Scripts\Activate.ps1` no PowerShell ou com `source .venv/bin/activate` no Bash (Linux/macOS). Depois rode:
 
-- Python 3.x
+```sh
+python -m pip install -r requirements.txt
+python -m uvicorn main:app
+```
 
-## Melhorias Futuras
+- **App:** http://127.0.0.1:8000/
+- **API interativa (Swagger):** http://127.0.0.1:8000/docs
 
-- Implementação de múltiplas contas.
-- Interface gráfica.
-- Persistência dos dados em arquivo ou banco de dados.
+Na interface, abra **Cadastro e contas**, cadastre um cliente com dados fictícios e use o mesmo CPF para abrir uma conta. Selecione a conta e faça um depósito para começar.
 
----
+## Banco de dados
 
-Projeto desenvolvido para fins de aprendizado
+Na primeira inicialização, o app cria `banco.sqlite3` ao lado de `main.py` usando o módulo `sqlite3` do Python. Clientes, contas, saldos e movimentações são mantidos ao reiniciar. Os valores são armazenados em centavos inteiros. Para zerar a demo, pare o servidor e apague `banco.sqlite3`.
+
+## Regras
+
+- O CPF é único e tem 11 dígitos, sem pontuação; o projeto não verifica os dígitos verificadores.
+- Cada conta tem saldo e extrato próprios, agência `0001` e número sequencial.
+- Valores são positivos e têm até duas casas decimais. Saques são limitados a R$ 500,00 por operação e não podem ultrapassar o saldo.
+- Cada conta pode realizar até 10 movimentações bem-sucedidas por dia, somando depósitos e saques. A contagem muda à meia-noite no horário de São Paulo.
+
+## Rotas da API
+
+| Método | Rota | Dados de entrada |
+| --- | --- | --- |
+| `POST` | `/api/usuarios` | `{"cpf":"00000000000","nome":"Ana Silva","data_nascimento":"1998-05-20","endereco":"Rua Exemplo, 123"}` |
+| `POST` | `/api/contas` | `{"cpf":"00000000000"}` |
+| `GET` | `/api/contas` | — |
+| `GET` | `/api/contas/{numero}/extrato` | — |
+| `POST` | `/api/contas/{numero}/depositos` | `{"valor":"150.00"}` |
+| `POST` | `/api/contas/{numero}/saques` | `{"valor":"50.00"}` |
+
+Use strings decimais com ponto na API para evitar arredondamento pelo cliente. Saldos e valores também são retornados como strings decimais.
+
+## Testes
+
+```sh
+python -m pip install httpx
+python -m unittest -v
+```
+
+Os testes usam arquivos SQLite temporários e não alteram o banco da demo.
+
+**Somente para uso local e didático.** Não há autenticação nem autorização. Os dados são compartilhados entre abas. Não exponha o servidor nem informe dados reais.
